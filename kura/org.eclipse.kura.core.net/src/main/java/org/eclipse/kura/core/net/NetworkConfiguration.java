@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2020 Eurotech and/or its affiliates and others
+ * Copyright (c) 2011, 2021 Eurotech and/or its affiliates and others
  * 
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -68,8 +69,12 @@ import org.eclipse.kura.net.wifi.WifiInterfaceAddressConfig;
 import org.eclipse.kura.net.wifi.WifiMode;
 import org.eclipse.kura.net.wifi.WifiRadioMode;
 import org.eclipse.kura.net.wifi.WifiSecurity;
+import org.eclipse.kura.system.SystemService;
 import org.eclipse.kura.usb.UsbDevice;
 import org.eclipse.kura.usb.UsbNetDevice;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +91,12 @@ public class NetworkConfiguration {
     public NetworkConfiguration() {
         logger.debug("Created empty NetworkConfiguration");
         this.netInterfaceConfigs = new HashMap<>();
+    }
+
+    protected SystemService getSystemService() {
+        BundleContext context = FrameworkUtil.getBundle(NetworkConfiguration.class).getBundleContext();
+        ServiceReference<SystemService> systemServiceSR = context.getServiceReference(SystemService.class);
+        return context.getService(systemServiceSR);
     }
 
     /**
@@ -568,7 +579,7 @@ public class NetworkConfiguration {
                 String delim;
 
                 // revision
-                StringBuffer revisionIdBuf = new StringBuffer();
+                StringBuilder revisionIdBuf = new StringBuilder();
                 String[] revisionId = ((ModemInterface<?>) netInterfaceConfig).getRevisionId();
                 if (revisionId != null) {
                     delim = null;
@@ -1286,9 +1297,11 @@ public class NetworkConfiguration {
             password = (Password) psswdObj;
         } else if (psswdObj instanceof String) {
             password = new Password((String) psswdObj);
+        } else if (psswdObj == null) {
+            password = new Password("");
         } else {
             throw new KuraException(KuraErrorCode.CONFIGURATION_ATTRIBUTE_INVALID, "Invalid password type.", key,
-                    psswdObj != null ? psswdObj.getClass() : null);
+                    psswdObj.getClass());
         }
         return password;
     }
@@ -1544,15 +1557,42 @@ public class NetworkConfiguration {
         }
     }
 
-    private void populateNetInterfaceConfiguration(
+    private Optional<NetInterfaceType> getInterfaceType(
+            AbstractNetInterface<? extends NetInterfaceAddressConfig> netInterfaceConfig, Map<String, Object> props) {
+        Optional<NetInterfaceType> interfaceType = Optional.empty();
+
+        String interfaceName = netInterfaceConfig.getName();
+        StringBuilder keyBuffer = new StringBuilder();
+        keyBuffer.append("net.interface.").append(interfaceName).append(".type");
+        Object type = props.get(keyBuffer.toString());
+        if (type == null) {
+            logger.debug("Interface {} type not found in properties. Try to infer it from the object class.",
+                    interfaceName);
+            if (netInterfaceConfig instanceof EthernetInterfaceConfigImpl) {
+                interfaceType = Optional.of(NetInterfaceType.ETHERNET);
+            } else if (netInterfaceConfig instanceof WifiInterfaceConfigImpl) {
+                interfaceType = Optional.of(NetInterfaceType.WIFI);
+            } else if (netInterfaceConfig instanceof LoopbackInterfaceConfigImpl) {
+                interfaceType = Optional.of(NetInterfaceType.LOOPBACK);
+            } else if (netInterfaceConfig instanceof ModemInterfaceConfigImpl) {
+                interfaceType = Optional.of(NetInterfaceType.MODEM);
+            }
+        } else {
+            interfaceType = Optional.of(NetInterfaceType.valueOf((String) type));
+        }
+        return interfaceType;
+    }
+
+    public void populateNetInterfaceConfiguration(
             AbstractNetInterface<? extends NetInterfaceAddressConfig> netInterfaceConfig, Map<String, Object> props)
             throws UnknownHostException, KuraException {
         String interfaceName = netInterfaceConfig.getName();
-
-        StringBuilder keyBuffer = new StringBuilder();
-        keyBuffer.append("net.interface.").append(interfaceName).append(".type");
-        NetInterfaceType interfaceType = NetInterfaceType.valueOf((String) props.get(keyBuffer.toString()));
-        logger.trace("Populating interface: {} of type {}", interfaceName, interfaceType);
+        Optional<NetInterfaceType> interfaceTypeOptional = getInterfaceType(netInterfaceConfig, props);
+        if (!interfaceTypeOptional.isPresent()) {
+            logger.debug("Interface {} type not found.", interfaceName);
+            return;
+        }
+        NetInterfaceType interfaceType = interfaceTypeOptional.get();
 
         // build the prefixes for all the properties associated with this interface
         StringBuilder sbPrefix = new StringBuilder();
@@ -1789,9 +1829,15 @@ public class NetworkConfiguration {
         String configStatus4Key = "net.interface." + interfaceName + ".config.ip4.status";
         if (props.containsKey(configStatus4Key)) {
             configStatus4 = (String) props.get(configStatus4Key);
-        }
-        if (configStatus4 == null) {
+        } else {
             configStatus4 = NetInterfaceStatus.netIPv4StatusDisabled.name();
+            if ((netInterfaceConfig instanceof EthernetInterfaceConfigImpl
+                    || netInterfaceConfig instanceof WifiInterfaceConfigImpl) && netInterfaceConfig.isVirtual()) {
+                SystemService service = getSystemService();
+                if (service != null) {
+                    configStatus4 = NetInterfaceStatus.valueOf(service.getNetVirtualDevicesConfig()).name();
+                }
+            }
         }
         logger.trace("Status Ipv4? {}", configStatus4);
 
@@ -1817,7 +1863,7 @@ public class NetworkConfiguration {
             }
 
             // Common NetInterfaceAddress
-            if (netInterfaceAddress instanceof NetInterfaceAddressImpl) {
+            if (!isDhcpClient4Enabled(props, interfaceName) && netInterfaceAddress instanceof NetInterfaceAddressImpl) {
                 logger.trace("netInterfaceAddress is instanceof NetInterfaceAddressImpl");
                 NetInterfaceAddressImpl netInterfaceAddressImpl = (NetInterfaceAddressImpl) netInterfaceAddress;
 
@@ -1930,13 +1976,8 @@ public class NetworkConfiguration {
 
             // POPULATE NetConfigs
             // dhcp4
-            String configDhcp4 = "net.interface." + interfaceName + ".config.dhcpClient4.enabled";
             NetConfigIP4 netConfigIP4;
-            boolean dhcpEnabled = false;
-            if (props.containsKey(configDhcp4)) {
-                dhcpEnabled = (Boolean) props.get(configDhcp4);
-                logger.trace("DHCP 4 enabled? {}", dhcpEnabled);
-            }
+            boolean dhcpEnabled = isDhcpClient4Enabled(props, interfaceName);
 
             netConfigIP4 = new NetConfigIP4(NetInterfaceStatus.valueOf(configStatus4), autoConnect);
             netConfigs.add(netConfigIP4);
@@ -2248,5 +2289,15 @@ public class NetworkConfiguration {
             }
         }
 
+    }
+
+    private boolean isDhcpClient4Enabled(Map<String, Object> props, String interfaceName) {
+        String configDhcp4 = "net.interface." + interfaceName + ".config.dhcpClient4.enabled";
+        boolean dhcpEnabled = false;
+        if (props.containsKey(configDhcp4)) {
+            dhcpEnabled = (Boolean) props.get(configDhcp4);
+            logger.trace("DHCP 4 enabled? {}", dhcpEnabled);
+        }
+        return dhcpEnabled;
     }
 }
