@@ -790,12 +790,6 @@ public class TabWirelessUi extends Composite implements NetworkTab {
     private void initForm() {
         // Wireless Mode
 
-<<<<<<< HEAD
-=======
-        logger.info("load frequencies");
-        loadChannelFrequencies();
-
->>>>>>> 2e8c2e6f3 (First attempt to remove dependency on kuranet and nwt config files)
         this.labelWireless.setText(MSGS.netWifiWirelessMode());
         this.wireless.addItem(WIFI_MODE_STATION_MESSAGE);
         this.wireless.addItem(WIFI_MODE_ACCESS_POINT_MESSAGE);
@@ -1540,17 +1534,8 @@ public class TabWirelessUi extends Composite implements NetworkTab {
 
         // radio mode
         String radioValue = this.radio.getSelectedItemText();
-<<<<<<< HEAD
 
         gwtWifiConfig.setRadioMode(radioValueToRadioMode(radioValue).name());
-=======
-        logger.info("radioValue  " + radioValue);
-        for (GwtWifiRadioMode mode : GwtWifiRadioMode.values()) {
-            if (MessageUtils.get(mode.name()).equals(radioValue)) {
-                gwtWifiConfig.setRadioMode(mode.name());
-            }
-        }
->>>>>>> 2e8c2e6f3 (First attempt to remove dependency on kuranet and nwt config files)
 
         logger.info("channels " + this.channelList.getSelectedIndex());
         logger.info("channels " + getChannelValueByIndex(this.channelList.getSelectedIndex()));
