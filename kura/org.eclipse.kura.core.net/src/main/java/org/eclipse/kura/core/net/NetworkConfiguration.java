@@ -1049,54 +1049,13 @@ public class NetworkConfiguration {
             // do nothing;
         }
 
-        try {
-            boolean persist = isPersist(prefix, properties);
-            modemConfig.setPersist(persist);
-        } catch (KuraException e) {
-            // do nothing;
-        }
-
-        try {
-            int maxFail = getMaximumFailures(prefix, properties);
-            modemConfig.setMaxFail(maxFail);
-        } catch (KuraException e) {
-            // do nothing;
-        }
-
-        try {
-            int resetTimeout = getResetTimeout(prefix, properties);
-            modemConfig.setResetTimeout(resetTimeout);
-        } catch (KuraException e) {
-            // do nothing;
-        }
-
-        try {
-            int idle = getIdle(prefix, properties);
-            modemConfig.setIdle(idle);
-        } catch (KuraException e) {
-            // do nothing;
-        }
-
-        try {
-            String activeFilter = getActiveFilter(prefix, properties);
-            modemConfig.setActiveFilter(activeFilter);
-        } catch (KuraException e) {
-            // do nothing;
-        }
-
-        try {
-            int lcpEchoInterval = getLcpEchoInterval(prefix, properties);
-            modemConfig.setLcpEchoInterval(lcpEchoInterval);
-        } catch (KuraException e) {
-            // do nothing;
-        }
-
-        try {
-            int lcpEchoFailure = getLcpEchoFailure(prefix, properties);
-            modemConfig.setLcpEchoFailure(lcpEchoFailure);
-        } catch (KuraException e) {
-            // do nothing;
-        }
+        modemConfig.setPersist(isPersist(prefix, properties));
+        modemConfig.setMaxFail(getMaximumFailures(prefix, properties));
+        modemConfig.setResetTimeout(getResetTimeout(prefix, properties));
+        modemConfig.setIdle(getIdle(prefix, properties));
+        modemConfig.setActiveFilter(getActiveFilter(prefix, properties));
+        modemConfig.setLcpEchoInterval(getLcpEchoInterval(prefix, properties));
+        modemConfig.setLcpEchoFailure(getLcpEchoFailure(prefix, properties));
 
         String username = (String) properties.get(prefix + "username");
         logger.trace("Username is {}", username);
@@ -1152,95 +1111,39 @@ public class NetworkConfiguration {
         return enabled;
     }
 
-    private static int getLcpEchoFailure(String prefix, Map<String, Object> properties) throws KuraException {
+    private static int getLcpEchoFailure(String prefix, Map<String, Object> properties) {
         String key = prefix + "lcpEchoFailure";
-        int lcpEchoFailure;
-        if (properties.get(key) != null) {
-            lcpEchoFailure = (Integer) properties.get(key);
-            logger.trace("LCP Echo Failure is {}", lcpEchoFailure);
-        } else {
-            logger.trace("LCP Echo Failure is null");
-            throw new KuraException(KuraErrorCode.CONFIGURATION_ATTRIBUTE_INVALID);
-        }
-        return lcpEchoFailure;
+        return (Integer) properties.getOrDefault(key, 0);
     }
 
-    private static int getLcpEchoInterval(String prefix, Map<String, Object> properties) throws KuraException {
+    private static int getLcpEchoInterval(String prefix, Map<String, Object> properties) {
         String key = prefix + "lcpEchoInterval";
-        int lcpEchoInterval;
-        if (properties.get(key) != null) {
-            lcpEchoInterval = (Integer) properties.get(key);
-            logger.trace("LCP Echo Interval is {}", lcpEchoInterval);
-        } else {
-            logger.trace("LCP Echo Interval is null");
-            throw new KuraException(KuraErrorCode.CONFIGURATION_ATTRIBUTE_INVALID);
-        }
-        return lcpEchoInterval;
+        return (Integer) properties.getOrDefault(key, 0);
     }
 
-    private static String getActiveFilter(String prefix, Map<String, Object> properties) throws KuraException {
+    private static String getActiveFilter(String prefix, Map<String, Object> properties) {
         String key = prefix + "activeFilter";
-        String activeFilter;
-        if (properties.get(key) != null) {
-            activeFilter = (String) properties.get(key);
-            logger.trace("activeFilter is {}", activeFilter);
-        } else {
-            logger.trace("activeFilter is null");
-            throw new KuraException(KuraErrorCode.CONFIGURATION_ATTRIBUTE_INVALID);
-        }
-        return activeFilter;
+        return (String) properties.getOrDefault(key, "inbound");
     }
 
-    private static int getIdle(String prefix, Map<String, Object> properties) throws KuraException {
+    private static int getIdle(String prefix, Map<String, Object> properties) {
         String key = prefix + "idle";
-        int idle;
-        if (properties.get(key) != null) {
-            idle = (Integer) properties.get(key);
-            logger.trace("idle is {}", idle);
-        } else {
-            logger.trace("idle is null");
-            throw new KuraException(KuraErrorCode.CONFIGURATION_ATTRIBUTE_INVALID);
-        }
-        return idle;
+        return (Integer) properties.getOrDefault(key, 95);
     }
 
-    private static int getResetTimeout(String prefix, Map<String, Object> properties) throws KuraException {
+    private static int getResetTimeout(String prefix, Map<String, Object> properties) {
         String key = prefix + "resetTimeout";
-        int resetTimeout;
-        if (properties.get(key) != null) {
-            resetTimeout = (Integer) properties.get(key);
-            logger.trace("resetTimeout is {}", resetTimeout);
-        } else {
-            logger.trace("resetTimeout is null");
-            throw new KuraException(KuraErrorCode.CONFIGURATION_ATTRIBUTE_INVALID);
-        }
-        return resetTimeout;
+        return (Integer) properties.getOrDefault(key, 5);
     }
 
-    private static int getMaximumFailures(String prefix, Map<String, Object> properties) throws KuraException {
+    private static int getMaximumFailures(String prefix, Map<String, Object> properties) {
         String key = prefix + "maxFail";
-        int maxFail;
-        if (properties.get(key) != null) {
-            maxFail = (Integer) properties.get(key);
-            logger.trace("maxfail is {}", maxFail);
-        } else {
-            logger.trace("maxfail is null");
-            throw new KuraException(KuraErrorCode.CONFIGURATION_ATTRIBUTE_INVALID);
-        }
-        return maxFail;
+        return (Integer) properties.getOrDefault(key, 5);
     }
 
-    private static boolean isPersist(String prefix, Map<String, Object> properties) throws KuraException {
+    private static boolean isPersist(String prefix, Map<String, Object> properties) {
         String key = prefix + "persist";
-        boolean persist;
-        if (properties.get(key) != null) {
-            persist = (Boolean) properties.get(key);
-            logger.trace("persist is {}", persist);
-        } else {
-            logger.trace("persist is null");
-            throw new KuraException(KuraErrorCode.CONFIGURATION_ATTRIBUTE_INVALID);
-        }
-        return persist;
+        return (Boolean) properties.getOrDefault(key, true);
     }
 
     private static int getPppNumber(String prefix, Map<String, Object> properties) throws KuraException {
