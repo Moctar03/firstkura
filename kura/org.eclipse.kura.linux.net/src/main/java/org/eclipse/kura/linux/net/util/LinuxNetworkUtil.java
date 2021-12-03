@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 public class LinuxNetworkUtil {
 
+    // public static final String PPP_PREFIX = "ppp";
     private static final String ETHTOOL_COMMAND = "ethtool";
 
     private static final Logger logger = LoggerFactory.getLogger(LinuxNetworkUtil.class);
@@ -368,11 +369,12 @@ public class LinuxNetworkUtil {
     private LinuxIfconfig getPppConfig(String ifaceName) {
         LinuxIfconfig config = null;
         if (ifaceName.matches(PPP_IFACE_REGEX)) {
-            File pppFile = new File(NetworkServiceImpl.PPP_PEERS_DIR + ifaceName);
-            if (pppFile.exists()) {
-                config = new LinuxIfconfig(ifaceName);
-                config.setType(NetInterfaceType.valueOf(MODEM));
-            }
+            // if (ifaceName.startsWith(PPP_PREFIX)) {
+            config = new LinuxIfconfig(ifaceName);
+            // File pppFile = new File(NetworkServiceImpl.PPP_PEERS_DIR + ifaceName);
+            // if (pppFile.exists()) {
+            config.setType(NetInterfaceType.valueOf(MODEM));
+            // }
         }
         return config;
     }
@@ -487,10 +489,10 @@ public class LinuxNetworkUtil {
      * Note: may return a cached information
      */
     public NetInterfaceType getType(String ifaceName) throws KuraException {
-        // ignore logical interfaces like "1-1.2"
-        if (Character.isDigit(ifaceName.charAt(0))) {
-            return NetInterfaceType.UNKNOWN;
-        }
+        // // ignore logical interfaces like "1-1.2"
+        // if (Character.isDigit(ifaceName.charAt(0))) {
+        // return NetInterfaceType.UNKNOWN;
+        // }
         for (String ignoreIface : IGNORE_IFACES) {
             if (ifaceName.startsWith(ignoreIface)) {
                 return NetInterfaceType.UNKNOWN;

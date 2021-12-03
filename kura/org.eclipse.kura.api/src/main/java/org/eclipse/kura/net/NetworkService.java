@@ -85,4 +85,6 @@ public interface NetworkService {
     public String getModemUsbPort(String interfaceName);
 
     public String getModemPppPort(ModemDevice modemDevice) throws KuraException;
+
+    public String getModemPppInterfaceName(String usbPath) throws KuraException;
 }

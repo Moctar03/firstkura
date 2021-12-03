@@ -74,7 +74,7 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
     private static final String CONFIG_AUTOCONNECT = ".config.autoconnect";
     private static final String CONFIG_MTU = ".config.mtu";
     private static final String NET_INTERFACES = "net.interfaces";
-    public static final String UNCONFIGURED_MODEM_REGEX = "^\\d+-\\d+(\\.\\d+)*$";
+    private static final String MODEM_PORT_REGEX = "^\\d+-\\d+(\\.\\d+)*$";
 
     private NetworkService networkService;
     private EventAdmin eventAdmin;
@@ -198,7 +198,11 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
     }
 
     protected NetInterfaceType getNetworkType(String interfaceName) throws KuraException {
-        return this.linuxNetworkUtil.getType(interfaceName);
+        if (interfaceName.matches(MODEM_PORT_REGEX)) {
+            return this.linuxNetworkUtil.getType(this.networkService.getModemPppInterfaceName(interfaceName));
+        } else {
+            return this.linuxNetworkUtil.getType(interfaceName);
+        }
     }
 
     @Override
@@ -224,7 +228,7 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
                     sb.append(PREFIX).append(interfaceName).append(".type");
 
                     NetInterfaceType type = getNetworkType(interfaceName);
-                    type = updateUnknownType(interfaceName, type);
+                    // type = updateUnknownType(interfaceName, type);
 
                     modifiedProps.put(sb.toString(), type.toString());
                 }
@@ -287,15 +291,16 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
         }
     }
 
-    private NetInterfaceType updateUnknownType(String interfaceName, NetInterfaceType type) {
-        NetInterfaceType result = type;
-        if (type == NetInterfaceType.UNKNOWN && interfaceName.matches(UNCONFIGURED_MODEM_REGEX)) {
-            // If the interface name is in a form such as "1-3.4" (USB address), assume it is a modem
-            result = NetInterfaceType.MODEM;
-        }
-
-        return result;
-    }
+    // private NetInterfaceType updateUnknownType(String interfaceName, NetInterfaceType type) {
+    // NetInterfaceType result = type;
+    // // if (type == NetInterfaceType.UNKNOWN && interfaceName.matches(UNCONFIGURED_MODEM_REGEX)) {
+    // if (type == NetInterfaceType.UNKNOWN && interfaceName.startsWith(LinuxNetworkUtil.PPP_PREFIX)) {
+    // // If the interface name is in a form such as "1-3.4" (USB address), assume it is a modem
+    // result = NetInterfaceType.MODEM;
+    // }
+    //
+    // return result;
+    // }
 
     @Override
     public synchronized ComponentConfiguration getConfiguration() throws KuraException {
@@ -333,7 +338,7 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
                     }
 
                     NetInterfaceType type = netInterface.getType();
-                    type = updateUnknownType(interfaceName, type);
+                    // type = updateUnknownType(interfaceName, type);
 
                     logger.debug("Getting config for {} type: {}", interfaceName, type);
                     switch (type) {
