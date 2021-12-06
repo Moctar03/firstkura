@@ -43,7 +43,10 @@ public enum AssetConstants {
     TYPE(CHANNEL_DEFAULT_PROPERTY_PREFIX.value() + "type"),
 
     /** Value type Property to be used in the configuration. */
-    VALUE_TYPE(CHANNEL_DEFAULT_PROPERTY_PREFIX.value() + "value.type");
+    VALUE_TYPE(CHANNEL_DEFAULT_PROPERTY_PREFIX.value() + "value.type"),
+    
+    /** Unit Property to be used in the configuration. */
+    VALUE_UNIT(CHANNEL_DEFAULT_PROPERTY_PREFIX.value() + "unit");
 
     /** The value. */
     private String value;
