@@ -241,5 +241,11 @@ public enum KuraErrorCode {
      * 
      * @since 2.2
      */
-    IO_ERROR;
+    IO_ERROR,
+    /**
+     * Modem unsupported.
+     * 
+     * @since 2.3
+     */
+    UNSUPPORTED_MODEM;
 }

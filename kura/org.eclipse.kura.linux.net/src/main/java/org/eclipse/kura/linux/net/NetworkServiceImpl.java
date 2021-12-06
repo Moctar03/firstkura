@@ -734,10 +734,11 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
         return "unknown";
     }
 
-    private ModemInterface<ModemInterfaceAddress> getModemInterfaceByPppName(String interfaceName, boolean isUp,
+    private ModemInterface<ModemInterfaceAddress> getModemInterfaceByPppName(String pppInterfaceName, boolean isUp,
             ModemDevice modemDevice) throws KuraException {
 
-        ModemInterfaceImpl<ModemInterfaceAddress> modemInterface = new ModemInterfaceImpl<>(interfaceName);
+        ModemInterfaceImpl<ModemInterfaceAddress> modemInterface = new ModemInterfaceImpl<>(
+                getModemUsbPort(pppInterfaceName));
 
         modemInterface.setModemDevice(modemDevice);
         if (modemDevice instanceof UsbModemDevice) {
@@ -749,7 +750,7 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
             modemInterface.setUsbDevice((UsbModemDevice) modemDevice);
         }
 
-        modemInterface.setPppNum(Integer.parseInt(interfaceName.substring(3)));
+        modemInterface.setPppNum(Integer.parseInt(pppInterfaceName.substring(3)));
         modemInterface.setManufacturer(modemDevice.getManufacturerName());
         modemInterface.setModel(modemDevice.getProductName());
         modemInterface.setModemIdentifier(modemDevice.getProductName());
@@ -762,17 +763,17 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
 
         modemInterface.setLoopback(false);
         modemInterface.setPointToPoint(true);
-        modemInterface.setState(getState(interfaceName, isUp));
+        modemInterface.setState(getState(pppInterfaceName, isUp));
         modemInterface.setHardwareAddress(new byte[] { 0, 0, 0, 0, 0, 0 });
-        LinuxIfconfig ifconfig = this.linuxNetworkUtil.getInterfaceConfiguration(interfaceName);
+        LinuxIfconfig ifconfig = this.linuxNetworkUtil.getInterfaceConfiguration(pppInterfaceName);
         if (ifconfig != null) {
             modemInterface.setMTU(ifconfig.getMtu());
             modemInterface.setSupportsMulticast(ifconfig.isMulticast());
         }
 
         modemInterface.setUp(isUp);
-        modemInterface.setVirtual(isVirtual(interfaceName));
-        modemInterface.setNetInterfaceAddresses(getModemInterfaceAddresses(interfaceName, isUp));
+        modemInterface.setVirtual(isVirtual(pppInterfaceName));
+        modemInterface.setNetInterfaceAddresses(getModemInterfaceAddresses(pppInterfaceName, isUp));
 
         return modemInterface;
 

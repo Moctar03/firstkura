@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import org.eclipse.kura.KuraErrorCode;
 import org.eclipse.kura.KuraException;
+import org.eclipse.kura.KuraUnsupportedModemException;
 import org.eclipse.kura.comm.CommURI;
 import org.eclipse.kura.core.net.AbstractNetInterface;
 import org.eclipse.kura.core.net.NetworkConfiguration;
@@ -75,7 +76,6 @@ import org.eclipse.kura.net.modem.ModemMonitorService;
 import org.eclipse.kura.net.modem.ModemReadyEvent;
 import org.eclipse.kura.net.modem.ModemRemovedEvent;
 import org.eclipse.kura.net.modem.ModemTechnologyType;
-import org.eclipse.kura.net.modem.SerialModemDevice;
 import org.eclipse.kura.system.SystemService;
 import org.eclipse.kura.usb.UsbDeviceEvent;
 import org.eclipse.kura.usb.UsbModemDevice;
@@ -379,7 +379,7 @@ public class ModemMonitorServiceImpl implements ModemMonitorService, ModemManage
                             newNetConfigs = oldNetConfigs;
                             oldNetConfigs = null;
                             try {
-                                setInterfaceNumber(ifaceName, newNetConfigs);
+                                // setInterfaceNumber(ifaceName, newNetConfigs);
                                 setNetInterfaceStatus(netInterfaceStatus, newNetConfigs);
                             } catch (NumberFormatException e) {
                                 logger.error("failed to set new interface number ", e);
@@ -660,8 +660,6 @@ public class ModemMonitorServiceImpl implements ModemMonitorService, ModemManage
             if (modemDevice instanceof UsbModemDevice) {
                 this.modems.put(((UsbModemDevice) modemDevice).getUsbPort(),
                         new MonitoredModem(modem, this.linuxNetworkUtil));
-            } else if (modemDevice instanceof SerialModemDevice) {
-                this.modems.put(modemDevice.getProductName(), new MonitoredModem(modem, this.linuxNetworkUtil));
             }
         } catch (Exception e) {
             logger.error("trackModem() :: {}", e.getMessage(), e);
@@ -920,7 +918,13 @@ public class ModemMonitorServiceImpl implements ModemMonitorService, ModemManage
 
         void initialize() throws KuraException {
 
-            String ifaceName = networkService.getModemPppPort(modem.getModemDevice());
+            UsbModemDevice modemDevice;
+            if (modem.getModemDevice() instanceof UsbModemDevice) {
+                modemDevice = (UsbModemDevice) modem.getModemDevice();
+            } else {
+                throw new KuraUnsupportedModemException("Modem type not recognized.");
+            }
+            String ifaceName = modemDevice.getUsbPort();
             List<NetConfig> netConfigs = null;
             if (ifaceName != null) {
                 NetInterfaceConfig<? extends NetInterfaceAddressConfig> netInterfaceConfig = networkConfig

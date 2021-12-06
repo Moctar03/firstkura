@@ -1042,12 +1042,12 @@ public class NetworkConfiguration {
             // do nothing;
         }
 
-        try {
-            int pppNum = getPppNumber(prefix, properties);
-            modemConfig.setPppNumber(pppNum);
-        } catch (KuraException e) {
-            // do nothing;
-        }
+        // try {
+        // int pppNum = getPppNumber(prefix, properties);
+        // modemConfig.setPppNumber(pppNum);
+        // } catch (KuraException e) {
+        // // do nothing;
+        // }
 
         modemConfig.setPersist(isPersist(prefix, properties));
         modemConfig.setMaxFail(getMaximumFailures(prefix, properties));
@@ -2188,7 +2188,9 @@ public class NetworkConfiguration {
             if (interfaceType == NetInterfaceType.MODEM) {
                 logger.trace("Adding modem netconfig");
 
-                netConfigs.add(getModemConfig(netIfConfigPrefix, props));
+                ModemConfig modemConfig = getModemConfig(netIfConfigPrefix, props);
+                modemConfig.setPppNumber(((ModemInterfaceConfigImpl) netInterfaceConfig).getPppNum());
+                netConfigs.add(modemConfig);
             }
         }
 
