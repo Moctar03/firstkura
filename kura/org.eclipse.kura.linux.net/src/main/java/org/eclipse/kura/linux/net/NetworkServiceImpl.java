@@ -451,7 +451,6 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
         return activeInterfaces;
     }
 
-    // intefacenaem = ppp
     public NetInterface<? extends NetInterfaceAddress> getNetworkInterface(String interfaceName) throws KuraException {
 
         waitActivated();
@@ -467,16 +466,6 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
             logger.debug("Ignoring {} interface.", interfaceName);
             return null;
         }
-
-        // String interfaceName = networkInterfaceName;
-        // if (networkInterfaceName.startsWith("ppp")) {
-        // interfaceName = getModemUsbPort(interfaceName);
-        // if (interfaceName == null || interfaceName.isEmpty()) {
-        // logger.debug("Interface name {} not found", networkInterfaceName);
-        // return null;
-        // }
-        // logger.debug("Set interface name {} for modem interface {}", networkInterfaceName, interfaceName);
-        // }
 
         NetInterfaceType type = ifconfig.getType();
         boolean isUp = ifconfig.isUp();
@@ -564,22 +553,7 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
                     return null;
                 }
 
-                ModemDevice modemDevice = null;
-                // if (interfaceName.startsWith("ppp")) {
-                // already connected - find the corresponding usb device
-                // String modemUsbPort = getModemUsbPort(interfaceName);
-                // if (modemUsbPort != null && !modemUsbPort.isEmpty()) {
-                modemDevice = this.detectedUsbModems.get(modemUsbPort);
-                // }
-                // if (modemDevice == null && this.serialModem != null) {
-                // modemDevice = this.serialModem;
-                // }
-                // } else if (interfaceName.matches(UNCONFIGURED_MODEM_REGEX)) {
-                // // the interface name is in the form of a usb port i.e. "1-3.4"
-                // modemDevice = this.detectedUsbModems.get(interfaceName);
-                // } else if (this.serialModem != null && interfaceName.equals(this.serialModem.getProductName())) {
-                // modemDevice = this.serialModem;
-                // }
+                ModemDevice modemDevice = this.detectedUsbModems.get(modemUsbPort);
                 return modemDevice != null ? getModemInterfaceByPppName(interfaceName, isUp, modemDevice) : null;
             }
             return null;
@@ -760,10 +734,10 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
         return "unknown";
     }
 
-    private ModemInterface<ModemInterfaceAddress> getModemInterfaceByPppName(String interfaceName, boolean isUp,
+    private ModemInterface<ModemInterfaceAddress> getModemInterfaceByPppName(String pppInterfaceName, boolean isUp,
             ModemDevice modemDevice) throws KuraException {
 
-        ModemInterfaceImpl<ModemInterfaceAddress> modemInterface = new ModemInterfaceImpl<>(interfaceName);
+        ModemInterfaceImpl<ModemInterfaceAddress> modemInterface = new ModemInterfaceImpl<>(pppInterfaceName);
 
         modemInterface.setModemDevice(modemDevice);
         if (modemDevice instanceof UsbModemDevice) {
@@ -775,7 +749,7 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
             modemInterface.setUsbDevice((UsbModemDevice) modemDevice);
         }
 
-        modemInterface.setPppNum(Integer.parseInt(interfaceName.substring(3)));
+        modemInterface.setPppNum(Integer.parseInt(pppInterfaceName.substring(3)));
         modemInterface.setManufacturer(modemDevice.getManufacturerName());
         modemInterface.setModel(modemDevice.getProductName());
         modemInterface.setModemIdentifier(modemDevice.getProductName());
@@ -788,17 +762,17 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
 
         modemInterface.setLoopback(false);
         modemInterface.setPointToPoint(true);
-        modemInterface.setState(getState(interfaceName, isUp));
+        modemInterface.setState(getState(pppInterfaceName, isUp));
         modemInterface.setHardwareAddress(new byte[] { 0, 0, 0, 0, 0, 0 });
-        LinuxIfconfig ifconfig = this.linuxNetworkUtil.getInterfaceConfiguration(interfaceName);
+        LinuxIfconfig ifconfig = this.linuxNetworkUtil.getInterfaceConfiguration(pppInterfaceName);
         if (ifconfig != null) {
             modemInterface.setMTU(ifconfig.getMtu());
             modemInterface.setSupportsMulticast(ifconfig.isMulticast());
         }
 
         modemInterface.setUp(isUp);
-        modemInterface.setVirtual(isVirtual(interfaceName));
-        modemInterface.setNetInterfaceAddresses(getModemInterfaceAddresses(interfaceName, isUp));
+        modemInterface.setVirtual(isVirtual(pppInterfaceName));
+        modemInterface.setNetInterfaceAddresses(getModemInterfaceAddresses(pppInterfaceName, isUp));
 
         return modemInterface;
 

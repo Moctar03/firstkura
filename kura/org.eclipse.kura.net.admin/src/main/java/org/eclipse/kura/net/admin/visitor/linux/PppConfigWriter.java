@@ -13,12 +13,15 @@
 package org.eclipse.kura.net.admin.visitor.linux;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.kura.KuraException;
+import org.eclipse.kura.KuraIOException;
 import org.eclipse.kura.core.net.AbstractNetInterface;
 import org.eclipse.kura.core.net.NetworkConfiguration;
 import org.eclipse.kura.core.net.NetworkConfigurationVisitor;
@@ -92,9 +95,8 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
     }
 
     private void writeConfig(ModemInterfaceConfigImpl modemInterfaceConfig) throws KuraException {
-        // String oldInterfaceName = modemInterfaceConfig.getName();
-        // String newInterfaceName = modemInterfaceConfig.getName();
         String interfaceName = "ppp" + modemInterfaceConfig.getPppNum();
+        String modemInterfaceName = modemInterfaceConfig.getName();
 
         if (!((AbstractNetInterface<?>) modemInterfaceConfig).isInterfaceEnabled()) {
             logger.info("Network interface status for {} ({}) is {} - not overwriting ppp configuration file",
@@ -104,13 +106,6 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
         }
 
         ModemConfig modemConfig = getModemConfig(modemInterfaceConfig);
-
-        // Use the ppp number for the interface name, if configured
-        // int pppNumber = getPppNumber(modemConfig);
-        // if (pppNumber >= 0) {
-        // newInterfaceName = "ppp" + pppNumber;
-        // modemInterfaceConfig.setName(newInterfaceName);
-        // }
 
         // Save the status and priority
         Class<? extends ModemPppConfigGenerator> configClass = null;
@@ -125,15 +120,18 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
             baudRate = 921600;
         }
 
-        // String pppPeerFilename = formPeerFilename(usbDevice);
-        // removeOldSymbolicLinks(oldInterfaceName, newInterfaceName, pppPeerFilename);
+        try {
+            removeSymbolicLink(formPeerLinkAbsoluteName(modemInterfaceName));
+        } catch (IOException e) {
+            throw new KuraIOException(e, "Failed to remove symbolic links");
+        }
 
         if (configClass != null) {
-            writePppConfigFiles(modemConfig, interfaceName, configClass, usbDevice, baudRate);
+            writePppConfigFiles(modemConfig, modemInterfaceName, configClass, usbDevice, baudRate);
         }
     }
 
-    private void writePppConfigFiles(ModemConfig modemConfig, String interfaceName,
+    private void writePppConfigFiles(ModemConfig modemConfig, String modemInterfaceName,
             Class<? extends ModemPppConfigGenerator> configClass, UsbDevice usbDevice, int baudRate) {
         try {
             String pppPeerFilename = formPeerFilename(usbDevice);
@@ -145,7 +143,8 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
             ModemPppConfigGenerator scriptGenerator = configClass.newInstance();
 
             if (modemConfig != null) {
-                logger.debug("Writing connect scripts for {} using {}", interfaceName, configClass);
+                logger.debug("Writing connect scripts for ppp{} ({}) using {}", modemConfig.getPppNumber(),
+                        modemInterfaceName, configClass);
 
                 logger.debug(WRITING, pppPeerFilename);
                 PppPeer pppPeer = scriptGenerator.getPppPeer(getDeviceId(usbDevice), modemConfig, pppLogfile,
@@ -153,18 +152,9 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
                 pppPeer.setBaudRate(baudRate);
                 pppPeer.write(pppPeerFilename, chapAuthSecretsFilename, papAuthSecretsFilename);
 
-                // if (pppNumber >= 0) {
-                // logger.debug("Linking peer file using ppp number: {}", pppNumber);
-                // String symlinkFilename = formPeerLinkAbsoluteName(pppNumber);
-                // LinuxFileUtil.createSymbolicLink(pppPeerFilename, symlinkFilename);
-                // } else {
-                // logger.error("Can't create symbolic link to {}, invalid ppp number: {}", pppPeerFilename,
-                // pppNumber);
-                // }
-
-                String symlinkFilename = formPeerLinkAbsoluteName(interfaceName);
+                String symlinkFilename = formPeerLinkAbsoluteName(modemInterfaceName);
                 if (!Files.isSymbolicLink(Paths.get(symlinkFilename))) {
-                    logger.debug("Linking peer file for interface {}", interfaceName);
+                    logger.debug("Linking peer file for interface {}", modemInterfaceName);
                     LinuxFileUtil.createSymbolicLink(pppPeerFilename, symlinkFilename);
                 }
 
@@ -183,20 +173,6 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
         }
     }
 
-    // private void removeOldSymbolicLinks(String oldInterfaceName, String newInterfaceName, String pppPeerFilename)
-    // throws KuraIOException {
-    // // Cleanup values associated with the old name if the interface name has changed
-    // if (!oldInterfaceName.equals(newInterfaceName)) {
-    // try {
-    // // Remove the old ppp peers symlink
-    // logger.debug("Removing old symlinks to {}", pppPeerFilename);
-    // removeSymbolicLinks(pppPeerFilename, OS_PEERS_DIRECTORY);
-    // } catch (IOException e) {
-    // throw new KuraIOException(e);
-    // }
-    // }
-    // }
-
     private ModemConfig getModemConfig(ModemInterfaceConfigImpl modemInterfaceConfig) {
         // Get the config
         ModemConfig modemConfig = null;
@@ -207,14 +183,6 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
         }
         return modemConfig;
     }
-
-    // private int getPppNumber(ModemConfig modemConfig) {
-    // int pppNum = -1;
-    // if (modemConfig != null) {
-    // pppNum = modemConfig.getPppNumber();
-    // }
-    // return pppNum;
-    // }
 
     public String formPeerFilename(UsbDevice usbDevice) {
         StringBuilder buf = new StringBuilder();
@@ -240,18 +208,10 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
         return buf.toString();
     }
 
-    // public String formPeerLinkName(int pppUnitNo) {
-    // StringBuilder peerLinkName = new StringBuilder();
-    // peerLinkName.append("ppp");
-    // peerLinkName.append(pppUnitNo);
-    //
-    // return peerLinkName.toString();
-    // }
-
-    public String formPeerLinkAbsoluteName(String pppInterfaceName) {
+    public String formPeerLinkAbsoluteName(String interfaceName) {
         StringBuilder peerLink = new StringBuilder();
         peerLink.append(OS_PEERS_DIRECTORY);
-        peerLink.append(pppInterfaceName);
+        peerLink.append(interfaceName);
         return peerLink.toString();
     }
 
@@ -298,23 +258,10 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
         return sb.toString();
     }
 
-    // // Delete all symbolic links to the specified target file in the specified
-    // // directory
-    // private void removeSymbolicLinks(String target, String directory) throws IOException {
-    // File targetFile = new File(target);
-    // File dir = new File(directory);
-    // if (dir.isDirectory()) {
-    // for (File file : dir.listFiles()) {
-    // if (file.getAbsolutePath().equals(targetFile.getAbsolutePath())) {
-    // // this is the target file
-    // continue;
-    // }
-    //
-    // if (file.getCanonicalPath().equals(targetFile.getAbsolutePath())) {
-    // logger.debug("Deleting {}", file.getAbsolutePath());
-    // file.delete();
-    // }
-    // }
-    // }
-    // }
+    private void removeSymbolicLink(String symlinkFilename) throws IOException {
+        Path path = Paths.get(symlinkFilename);
+        if (Files.exists(path)) {
+            Files.delete(path);
+        }
+    }
 }

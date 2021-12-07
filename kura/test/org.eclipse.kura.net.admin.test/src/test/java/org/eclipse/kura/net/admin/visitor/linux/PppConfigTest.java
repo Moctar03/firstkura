@@ -110,12 +110,6 @@ public class PppConfigTest {
     }
 
     @Test
-    public void shouldReturnPeerLinkName() {
-        givenOriginalPppConfigWriter();
-        thenPeerLinkNameIsReturned();
-    }
-
-    @Test
     public void shouldReturnPeerLinkAbsoluteName() {
         givenOriginalPppConfigWriter();
         thenPeerLinkAbsoluteNameIsReturned();
@@ -161,7 +155,7 @@ public class PppConfigTest {
             }
 
             @Override
-            public String formPeerLinkAbsoluteName(int pppUnitNo) {
+            public String formPeerLinkAbsoluteName(String pppInterfaceName) {
                 return PPP_DIR + PPP_PEERS_DIR + PPP2;
             }
 
@@ -316,12 +310,8 @@ public class PppConfigTest {
                 this.writer.formChatFilename(this.usbDevice));
     }
 
-    private void thenPeerLinkNameIsReturned() {
-        assertEquals(PPP2, this.writer.formPeerLinkName(2));
-    }
-
     private void thenPeerLinkAbsoluteNameIsReturned() {
-        assertEquals("/etc/ppp/peers/" + PPP2, this.writer.formPeerLinkAbsoluteName(2));
+        assertEquals("/etc/ppp/peers/" + PPP2, this.writer.formPeerLinkAbsoluteName("ppp2"));
     }
 
     private void thenDisconnectFilenameIsReturned() {

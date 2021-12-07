@@ -196,8 +196,8 @@ public class NetworkConfigurationServiceImplTest {
 
             @Override
             protected NetInterfaceType getNetworkType(String interfaceName) throws KuraException {
-                if ("eth1".equals(interfaceName)) {
-                    return NetInterfaceType.ETHERNET;
+                if (interfaceName.equals("1-2.3")) {
+                    return NetInterfaceType.MODEM;
                 }
 
                 return NetInterfaceType.UNKNOWN;
@@ -211,9 +211,8 @@ public class NetworkConfigurationServiceImplTest {
             Event event = invocation.getArgumentAt(0, Event.class);
 
             assertEquals("org/eclipse/kura/net/admin/event/NETWORK_EVENT_CONFIG_CHANGE_TOPIC", event.getTopic());
-            assertEquals(7, event.getPropertyNames().length); // 6+topics!
+            assertEquals(5, event.getPropertyNames().length); // 4+topics!
 
-            assertEquals("UNKNOWN", event.getProperty("net.interface.ppp0.type"));
             assertEquals("MODEM", event.getProperty("net.interface.1-2.3.type"));
 
             invocations[1] = true;
@@ -244,8 +243,7 @@ public class NetworkConfigurationServiceImplTest {
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("modified.interface.names", "testIntf");
-        properties.put("net.interfaces", "ppp0,1-2.3");
-        properties.put("net.interface.ppp0.config.password", "pass");
+        properties.put("net.interfaces", "1-2.3");
         properties.put("net.interface.1-2.3.config.password", "pass123");
 
         svc.updated(properties);

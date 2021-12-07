@@ -366,15 +366,11 @@ public class LinuxNetworkUtil {
         }
     }
 
-    private LinuxIfconfig getPppConfig(String ifaceName) {
+    private LinuxIfconfig getPppConfig(String pppInterfaceName) {
         LinuxIfconfig config = null;
-        if (ifaceName.matches(PPP_IFACE_REGEX)) {
-            // if (ifaceName.startsWith(PPP_PREFIX)) {
-            config = new LinuxIfconfig(ifaceName);
-            // File pppFile = new File(NetworkServiceImpl.PPP_PEERS_DIR + ifaceName);
-            // if (pppFile.exists()) {
+        if (pppInterfaceName.matches(PPP_IFACE_REGEX)) {
+            config = new LinuxIfconfig(pppInterfaceName);
             config.setType(NetInterfaceType.valueOf(MODEM));
-            // }
         }
         return config;
     }

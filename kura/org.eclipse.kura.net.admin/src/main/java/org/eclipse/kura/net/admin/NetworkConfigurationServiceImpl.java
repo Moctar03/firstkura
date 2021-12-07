@@ -217,7 +217,6 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
                 logger.debug("modified.interface.names: {}", properties.get("modified.interface.names"));
                 this.properties = properties;
 
-                // dynamically insert the type properties..
                 Map<String, Object> modifiedProps = new HashMap<>();
                 modifiedProps.putAll(properties);
                 String interfaces = (String) properties.get(NET_INTERFACES);
@@ -228,7 +227,6 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
                     sb.append(PREFIX).append(interfaceName).append(".type");
 
                     NetInterfaceType type = getNetworkType(interfaceName);
-                    // type = updateUnknownType(interfaceName, type);
 
                     modifiedProps.put(sb.toString(), type.toString());
                 }
@@ -242,13 +240,11 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
                     networkConfiguration.accept(visitor);
                 }
 
-                // raise the event because there was a change
                 this.eventAdmin.postEvent(new NetworkConfigurationChangeEvent(modifiedProps));
             } else {
                 logger.debug("properties are null");
             }
         } catch (Exception e) {
-            // TODO - would still want an event if partially successful?
             logger.error("Error updating the configuration", e);
         }
     }
@@ -291,17 +287,6 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
         }
     }
 
-    // private NetInterfaceType updateUnknownType(String interfaceName, NetInterfaceType type) {
-    // NetInterfaceType result = type;
-    // // if (type == NetInterfaceType.UNKNOWN && interfaceName.matches(UNCONFIGURED_MODEM_REGEX)) {
-    // if (type == NetInterfaceType.UNKNOWN && interfaceName.startsWith(LinuxNetworkUtil.PPP_PREFIX)) {
-    // // If the interface name is in a form such as "1-3.4" (USB address), assume it is a modem
-    // result = NetInterfaceType.MODEM;
-    // }
-    //
-    // return result;
-    // }
-
     @Override
     public synchronized ComponentConfiguration getConfiguration() throws KuraException {
         logger.debug("getConfiguration()");
@@ -338,7 +323,6 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
                     }
 
                     NetInterfaceType type = netInterface.getType();
-                    // type = updateUnknownType(interfaceName, type);
 
                     logger.debug("Getting config for {} type: {}", interfaceName, type);
                     switch (type) {
@@ -396,7 +380,6 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
     private boolean shouldSkipNetworkConfiguration(String interfaceName) {
         boolean result = false;
 
-        // ignore mon and redpine vlan interface
         if (interfaceName.startsWith("mon.") || interfaceName.startsWith("rpine")) {
             result = true;
         }

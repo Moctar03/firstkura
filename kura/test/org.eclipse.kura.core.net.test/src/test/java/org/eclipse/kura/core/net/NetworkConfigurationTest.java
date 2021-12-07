@@ -1863,7 +1863,6 @@ public class NetworkConfigurationTest {
         properties.put("prefix.ipAddress", null);
         properties.put("prefix.password", "password");
         properties.put("prefix.pdpType", null);
-        properties.put("prefix.pppNum", null);
         properties.put("prefix.persist", null);
         properties.put("prefix.maxFail", null);
         properties.put("prefix.idle", null);
@@ -1886,6 +1885,13 @@ public class NetworkConfigurationTest {
         expected.setUsername("username");
         expected.setEnabled(false);
         expected.setGpsEnabled(false);
+        expected.setPersist(true);
+        expected.setMaxFail(5);
+        expected.setIdle(95);
+        expected.setActiveFilter("inbound");
+        expected.setResetTimeout(5);
+        expected.setLcpEchoFailure(0);
+        expected.setLcpEchoInterval(0);
 
         ModemConfig modemConfig = (ModemConfig) TestUtil.invokePrivate(config, "getModemConfig", prefix, properties);
 
@@ -1907,7 +1913,6 @@ public class NetworkConfigurationTest {
         properties.put("prefix.ipAddress", "");
         properties.put("prefix.password", "password");
         properties.put("prefix.pdpType", "");
-        properties.put("prefix.pppNum", 4);
         properties.put("prefix.persist", true);
         properties.put("prefix.maxFail", 5);
         properties.put("prefix.idle", 6);
@@ -1929,7 +1934,6 @@ public class NetworkConfigurationTest {
         expected.setIpAddress(null);
         expected.setPassword("password");
         expected.setPdpType(PdpType.UNKNOWN);
-        expected.setPppNumber(4);
         expected.setPersist(true);
         expected.setMaxFail(5);
         expected.setIdle(6);
@@ -1962,7 +1966,6 @@ public class NetworkConfigurationTest {
         properties.put("prefix.ipAddress", "10.0.0.1");
         properties.put("prefix.password", "password");
         properties.put("prefix.pdpType", "IP");
-        properties.put("prefix.pppNum", 4);
         properties.put("prefix.persist", true);
         properties.put("prefix.maxFail", 5);
         properties.put("prefix.idle", 6);
@@ -1984,7 +1987,6 @@ public class NetworkConfigurationTest {
         expected.setIpAddress(IPAddress.parseHostAddress("10.0.0.1"));
         expected.setPassword("password");
         expected.setPdpType(PdpType.IP);
-        expected.setPppNumber(4);
         expected.setPersist(true);
         expected.setMaxFail(5);
         expected.setIdle(6);
