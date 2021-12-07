@@ -945,24 +945,16 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
         return null;
     }
 
-    /**
-     * Given an interface name (e.g. 'ppp0'), look up the associated usb port
-     */
     @Override
-    public String getModemUsbPort(String interfaceName) {
+    public String getModemUsbPort(String pppInterfaceName) {
         for (Entry<String, Integer> entry : this.validUsbModemsPppNumbers.entrySet()) {
-            if (generatePppName(entry.getValue()).equals(interfaceName)) {
+            if (generatePppName(entry.getValue()).equals(pppInterfaceName)) {
                 return entry.getKey();
             }
         }
         return null;
     }
 
-    /**
-     * Given a modem device, look up the associated ppp interface name
-     *
-     * @throws KuraException
-     */
     @Override
     public String getModemPppPort(ModemDevice modemDevice) throws KuraException {
         if (modemDevice instanceof UsbModemDevice) {
@@ -973,11 +965,6 @@ public class NetworkServiceImpl implements NetworkService, EventHandler {
         return null;
     }
 
-    /**
-     * Given a usb path, look up the associated ppp interface name
-     *
-     * @throws KuraException
-     */
     @Override
     public String getModemPppInterfaceName(String usbPath) throws KuraException {
         return generatePppName(this.validUsbModemsPppNumbers.get(usbPath));

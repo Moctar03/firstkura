@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 public class LinuxNetworkUtil {
 
-    // public static final String PPP_PREFIX = "ppp";
     private static final String ETHTOOL_COMMAND = "ethtool";
 
     private static final Logger logger = LoggerFactory.getLogger(LinuxNetworkUtil.class);
@@ -485,10 +484,6 @@ public class LinuxNetworkUtil {
      * Note: may return a cached information
      */
     public NetInterfaceType getType(String ifaceName) throws KuraException {
-        // // ignore logical interfaces like "1-1.2"
-        // if (Character.isDigit(ifaceName.charAt(0))) {
-        // return NetInterfaceType.UNKNOWN;
-        // }
         for (String ignoreIface : IGNORE_IFACES) {
             if (ifaceName.startsWith(ignoreIface)) {
                 return NetInterfaceType.UNKNOWN;

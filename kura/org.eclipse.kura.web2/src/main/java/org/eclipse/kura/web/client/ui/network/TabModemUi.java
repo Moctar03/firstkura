@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2020 Eurotech and/or its affiliates and others
+ * Copyright (c) 2011, 2021 Eurotech and/or its affiliates and others
  * 
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -293,9 +293,6 @@ public class TabModemUi extends Composite implements NetworkTab {
 
     @Override
     public boolean isValid() {
-        // if (this.number.getText() == null || "".equals(this.number.getText().trim())) {
-        // this.groupNumber.setValidationState(ValidationState.ERROR);
-        // }
         if (this.dial.getText() == null || "".equals(this.dial.getText().trim())) {
             this.groupDial.setValidationState(ValidationState.ERROR);
         }
@@ -472,18 +469,6 @@ public class TabModemUi extends Composite implements NetworkTab {
 
         // INTERFACE NUMBER
         this.labelNumber.setText(MSGS.netModemInterfaceNum());
-        // this.number.addValueChangeHandler(event -> {
-        // setDirty(true);
-        // if (TabModemUi.this.number.getText().trim() != null
-        // && (!TabModemUi.this.number.getText().trim().matches(REGEX_NUM)
-        // || Integer.parseInt(TabModemUi.this.number.getText()) < 0)) {
-        // TabModemUi.this.helpNumber.setText("This Field requires a numeric input");
-        // TabModemUi.this.groupNumber.setValidationState(ValidationState.ERROR);
-        // } else {
-        // TabModemUi.this.helpNumber.setText("");
-        // TabModemUi.this.groupNumber.setValidationState(ValidationState.NONE);
-        // }
-        // });
         this.number.setEnabled(false);
         this.number.addMouseOverHandler(event -> {
             TabModemUi.this.helpText.clear();

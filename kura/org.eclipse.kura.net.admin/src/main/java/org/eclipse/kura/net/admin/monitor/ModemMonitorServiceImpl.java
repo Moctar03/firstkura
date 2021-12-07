@@ -379,7 +379,6 @@ public class ModemMonitorServiceImpl implements ModemMonitorService, ModemManage
                             newNetConfigs = oldNetConfigs;
                             oldNetConfigs = null;
                             try {
-                                // setInterfaceNumber(ifaceName, newNetConfigs);
                                 setNetInterfaceStatus(netInterfaceStatus, newNetConfigs);
                             } catch (NumberFormatException e) {
                                 logger.error("failed to set new interface number ", e);

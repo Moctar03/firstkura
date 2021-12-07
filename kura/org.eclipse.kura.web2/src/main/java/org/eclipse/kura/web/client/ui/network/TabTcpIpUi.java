@@ -629,7 +629,6 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
 
     private void update() {
         if (this.selectedNetIfConfig != null) {
-            logger.info("tcpip1");
             // Status
             for (int i = 0; i < this.status.getItemCount(); i++) {
                 if (this.status.getItemText(i).equals(MessageUtils.get(this.selectedNetIfConfig.getStatus()))) {
@@ -637,7 +636,6 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
                     break;
                 }
             }
-            logger.info("tcpip2");
             // Configure
             for (int i = 0; i < this.configure.getItemCount(); i++) {
                 if (this.configure.getValue(i).equals(MessageUtils.get(this.selectedNetIfConfig.getConfigMode()))) {
@@ -645,32 +643,23 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
                     break;
                 }
             }
-            logger.info("tcpip3");
             this.tabs.adjustInterfaceTabs();
-            logger.info("tcpip4");
             this.ip.setText(this.selectedNetIfConfig.getIpAddress());
-            logger.info("tcpip5");
             this.subnet.setText(this.selectedNetIfConfig.getSubnetMask());
-            logger.info("tcpip6");
             this.gateway.setText(this.selectedNetIfConfig.getGateway());
-            logger.info("tcpip7");
             if (this.selectedNetIfConfig.getReadOnlyDnsServers() != null) {
-                logger.info("tcpip8.1");
                 this.dnsRead.setText(this.selectedNetIfConfig.getReadOnlyDnsServers());
                 this.dnsRead.setVisible(true);// ???
             } else {
-                logger.info("tcpip8.2");
                 this.dnsRead.setText("");
                 this.dnsRead.setVisible(false);
             }
 
             if (this.selectedNetIfConfig.getDnsServers() != null) {
-                logger.info("tcpip9.1");
                 String dnsServersUi = this.selectedNetIfConfig.getDnsServers().replace(" ", "\n");
                 this.dns.setValue(dnsServersUi);
                 this.dns.setVisible(true);
             } else {
-                logger.info("tcpip9.2");
                 this.dns.setVisible(false);
             }
             refreshForm();
@@ -688,7 +677,6 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
 
         // disabling fields based on the interface
         if (this.selectedNetIfConfig != null && this.selectedNetIfConfig.getHwTypeEnum() == GwtNetIfType.MODEM) {
-            logger.info("tcpip10");
             this.configure.setEnabled(false);
             this.ip.setEnabled(false);
             this.subnet.setEnabled(false);
@@ -700,7 +688,6 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
             this.configure.setSelectedIndex(this.configure.getItemText(0).equals(IPV4_MODE_DHCP_MESSAGE) ? 0 : 1);
         } else if (this.selectedNetIfConfig != null
                 && this.selectedNetIfConfig.getHwTypeEnum() == GwtNetIfType.LOOPBACK) {
-            logger.info("tcpip11");
             // loopback interface should not be editable
             this.status.setEnabled(false);
             this.configure.setEnabled(false);
@@ -710,11 +697,9 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
             this.dns.setEnabled(false);
             this.renew.setEnabled(false);
         } else {
-            logger.info("tcpip12");
             if (VMSGS.netIPv4StatusDisabled().equals(this.status.getSelectedValue())
                     || VMSGS.netIPv4StatusUnmanaged().equals(this.status.getSelectedValue())
                     || VMSGS.netIPv4StatusL2Only().equals(this.status.getSelectedValue())) {
-                logger.info("tcpip12.1");
                 String configureVal = this.configure.getItemText(0);
                 this.configure.setSelectedIndex(configureVal.equals(IPV4_MODE_DHCP_MESSAGE) ? 0 : 1);
                 this.ip.setText("");
@@ -727,7 +712,6 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
                 this.gateway.setText("");
                 this.dns.setText("");
             } else {
-                logger.info("tcpip12.2");
                 String configureValue = this.configure.getSelectedValue();
                 if (configureValue.equals(IPV4_MODE_DHCP_MESSAGE)) {
                     this.ip.setEnabled(false);
@@ -749,7 +733,6 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
 
         // Show read-only dns field when DHCP is selected and there are no
         // custom DNS entries
-        logger.info("tcpip13");
         String configureValue = this.configure.getSelectedItemText();
         if (configureValue.equals(IPV4_MODE_DHCP_MESSAGE)
                 && (this.dns.getValue() == null || this.dns.getValue().isEmpty())) {
@@ -757,7 +740,6 @@ public class TabTcpIpUi extends Composite implements NetworkTab {
         } else {
             this.dnsRead.setVisible(false);
         }
-        logger.info("tcpip14");
     }
 
     private void reset() {
